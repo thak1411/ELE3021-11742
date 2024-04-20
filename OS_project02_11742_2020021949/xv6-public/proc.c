@@ -38,9 +38,9 @@ static struct proc* rn_queue_pop(struct rn_queue* q) {
   return ret;
 }
 
-static int rn_queue_size(struct rn_queue* q) {
-  return q->size;
-}
+// static int rn_queue_size(struct rn_queue* q) {
+//   return q->size;
+// }
 
 struct rn_heap {
   int size;
@@ -141,6 +141,7 @@ struct {
   struct rn_queue l[3];
   struct rn_heap l3;
   struct rn_queue monopoly;
+  int monopoly_size;
 } ptable;
 
 static struct proc *initproc;
@@ -584,11 +585,13 @@ _deprecated_scheduler(void)
 
         scheduler_run_process(c, p);
 
-        if (p->state == RUNNABLE) {
+        if (p->state == ZOMBIE) {
+          --ptable.monopoly_size;
+        } else if (p->state == RUNNABLE) {
           rn_queue_insert(&ptable.monopoly, p);
         }
       }
-      unmonopolize();
+      if (ptable.monopoly_size <= 0) unmonopolize();
     }
 cont:
     release(&ptable.lock);
@@ -835,7 +838,7 @@ int setmonopoly(int pid, int password) {
         p->q_level = 99;
         rn_queue_insert(&ptable.monopoly, p);
       }
-      ret = rn_queue_size(&ptable.monopoly);
+      ret = ++ptable.monopoly_size;
       break;
     }
   }

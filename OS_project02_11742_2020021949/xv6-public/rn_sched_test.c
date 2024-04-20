@@ -234,7 +234,6 @@ void rn_test4() {
     
     p1 = fork();
     if (p1 == 0) {
-        if (setmonopoly(getpid(), RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed\n");
         rn_sleep(1000);
         printf(1, "monopolized process %d\n", getpid());
         for (int cnt = 100; cnt--; ) {
@@ -247,7 +246,6 @@ void rn_test4() {
 
     p2 = fork();
     if (p2 == 0) {
-        if (setmonopoly(getpid(), RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed\n");
         rn_sleep(1000);
         printf(1, "monopolized process %d\n", getpid());
         for (int cnt = 60; cnt--; ) {
@@ -260,7 +258,6 @@ void rn_test4() {
 
     p3 = fork();
     if (p3 == 0) {
-        if (setmonopoly(getpid(), RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed\n");
         rn_sleep(1000);
         printf(1, "monopolized process %d\n", getpid());
         for (int cnt = 30; cnt--; ) {
@@ -270,6 +267,10 @@ void rn_test4() {
         print_level_cnt(level_cnt, "p3");
         exit();
     }
+
+    if (setmonopoly(p1, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p1]\n");
+    if (setmonopoly(p2, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p2]\n");
+    if (setmonopoly(p3, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p3]\n");
 
     rn_sleep(5000);
     printf(1, "monopolize!\n");
@@ -465,7 +466,6 @@ void rn_test6() {
 
     p7 = fork();
     if (p7 == 0) {
-        if (setmonopoly(getpid(), RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed\n");
         rn_sleep(1000);
         printf(1, "monopolized process %d\n", getpid());
         for (int cnt = 30; cnt--; ) {
@@ -478,7 +478,6 @@ void rn_test6() {
 
     p8 = fork();
     if (p8 == 0) {
-        if (setmonopoly(getpid(), RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed\n");
         rn_sleep(1000);
         printf(1, "monopolized process %d\n", getpid());
         for (int cnt = 30; cnt--; ) {
@@ -488,6 +487,9 @@ void rn_test6() {
         print_level_cnt(level_cnt, "p8");
         exit();
     }
+
+    if (setmonopoly(p7, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p7]\n");
+    if (setmonopoly(p8, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p8]\n");
 
     w_list[0] = p6;
     w_list[1] = p5;
@@ -519,13 +521,276 @@ void rn_test6() {
     printf(1, "rn_test6 finished successfully\n\n\n");
 }
 
+void rn_test7() {
+    int p, p1, p2, p3, w_cnt, w_list[3], level_cnt[5];
+
+    printf(1, "rn_test7 [MoQ Only - Sleep Test]\n");
+
+    level_cnt_init(level_cnt);
+    
+    p1 = fork();
+    if (p1 == 0) {
+        sleep(111);
+        printf(1, "monopolized process %d\n", getpid());
+        for (int cnt = 100; cnt--; ) {
+            rn_sleep(60);
+            add_level_cnt(level_cnt);
+        }
+        print_level_cnt(level_cnt, "p1");
+        exit();
+    }
+
+    p2 = fork();
+    if (p2 == 0) {
+        sleep(111);
+        printf(1, "monopolized process %d\n", getpid());
+        for (int cnt = 60; cnt--; ) {
+            rn_sleep(60);
+            add_level_cnt(level_cnt);
+        }
+        print_level_cnt(level_cnt, "p2");
+        exit();
+    }
+
+    p3 = fork();
+    if (p3 == 0) {
+        sleep(111);
+        printf(1, "monopolized process %d\n", getpid());
+        for (int cnt = 30; cnt--; ) {
+            rn_sleep(60);
+            add_level_cnt(level_cnt);
+        }
+        print_level_cnt(level_cnt, "p3");
+        exit();
+    }
+
+    if (setmonopoly(p1, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p1]\n");
+    if (setmonopoly(p2, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p2]\n");
+    if (setmonopoly(p3, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p3]\n");
+
+    rn_sleep(5000);
+    printf(1, "monopolize!\n");
+    monopolize();
+
+    w_list[0] = p1;
+    w_list[1] = p2;
+    w_list[2] = p3;
+    w_cnt = 0;
+    for (; w_cnt < 3; ) {
+        p = wait();
+        if (p == w_list[w_cnt]) ++w_cnt;
+        else {
+            printf(1, "rn_test7 failed\n expected wait pid = %d, but wait pid = %d\n", w_list[w_cnt], p);
+            exit();
+        }
+    }
+
+    printf(1, "rn_test7 finished successfully\n\n\n");
+}
+
+void rn_test8() {
+    int p, p1, p2, p3, w_cnt, w_list[3], level_cnt[5];
+
+    printf(1, "rn_test8 [L0 Only - All Sleep]\n");
+
+    level_cnt_init(level_cnt);
+    p1 = fork();
+    if (p1 == 0) {
+        for (int cnt = 200; cnt--; ) {
+            sleep(2);
+            add_level_cnt(level_cnt);
+            yield();
+        }
+        print_level_cnt(level_cnt, "p1");
+        exit();
+    }
+
+    p2 = fork();
+    if (p2 == 0) {
+        for (int cnt = 100; cnt--; ) {
+            sleep(2);
+            add_level_cnt(level_cnt);
+            yield();
+        }
+        print_level_cnt(level_cnt, "p2");
+        exit();
+    }
+
+    p3 = fork();
+    if (p3 == 0) {
+        for (int cnt = 50; cnt--; ) {
+            sleep(2);
+            add_level_cnt(level_cnt);
+            yield();
+        }
+        print_level_cnt(level_cnt, "p3");
+        exit();
+    }
+
+    w_list[0] = p3;
+    w_list[1] = p2;
+    w_list[2] = p1;
+    w_cnt = 0;
+    for (; w_cnt < 3; ) {
+        p = wait();
+        if (p == w_list[w_cnt]) ++w_cnt;
+        else {
+            printf(1, "rn_test8 failed\n expected wait pid = %d, but wait pid = %d\n", w_list[w_cnt], p);
+            exit();
+        }
+    }
+
+    printf(1, "rn_test8 finished successfully\n\n\n");
+}
+
+void rn_test9() {
+    int p, p1, p2, p3, w_cnt, w_list[3], level_cnt[5];
+
+    printf(1, "rn_test9 [L0 Only - Sleep & Kill]\n");
+
+    level_cnt_init(level_cnt);
+    p1 = fork();
+    if (p1 == 0) {
+        for (int cnt = 200; cnt--; ) {
+            sleep(2);
+            add_level_cnt(level_cnt);
+            yield();
+        }
+        print_level_cnt(level_cnt, "p1");
+        exit();
+    }
+
+    p2 = fork();
+    if (p2 == 0) {
+        for (int cnt = 100; cnt--; ) {
+            sleep(2);
+            add_level_cnt(level_cnt);
+            yield();
+        }
+        print_level_cnt(level_cnt, "p2");
+        exit();
+    }
+
+    p3 = fork();
+    if (p3 == 0) {
+        for (int cnt = 50; cnt--; ) {
+            sleep(2);
+            add_level_cnt(level_cnt);
+            yield();
+        }
+        print_level_cnt(level_cnt, "p3");
+        exit();
+    }
+
+    w_list[0] = p3;
+    w_list[1] = p1;
+    w_list[2] = p2;
+    w_cnt = 0;
+    for (; w_cnt < 3; ) {
+        p = wait();
+        if (p == w_list[w_cnt]) ++w_cnt;
+        else {
+            printf(1, "rn_test9 failed\n expected wait pid = %d, but wait pid = %d\n", w_list[w_cnt], p);
+            exit();
+        }
+        if (w_cnt == 1) {
+            printf(1, "kill process %d\n", p1);
+            kill(p1);
+        }
+    }
+
+    printf(1, "rn_test9 finished successfully\n\n\n");
+}
+
+void rn_test10() {
+    int p, p1, p2, p3, w_cnt, w_list[3], level_cnt[5];
+
+    printf(1, "rn_test10 [MoQ Only - Kill Self]\n");
+
+    level_cnt_init(level_cnt);
+    
+    p1 = fork();
+    if (p1 == 0) {
+        sleep(111);
+        printf(1, "monopolized process %d\n", getpid());
+        for (int cnt = 100; cnt--; ) {
+            rn_sleep(60);
+            add_level_cnt(level_cnt);
+        }
+        print_level_cnt(level_cnt, "p1");
+        exit();
+    }
+
+    p2 = fork();
+    if (p2 == 0) {
+        sleep(111);
+        printf(1, "monopolized process %d\n", getpid());
+        kill(getpid());
+        for (int cnt = 60; cnt--; ) {
+            rn_sleep(60);
+            add_level_cnt(level_cnt);
+        }
+        print_level_cnt(level_cnt, "p2");
+        exit();
+    }
+
+    p3 = fork();
+    if (p3 == 0) {
+        sleep(111);
+        printf(1, "monopolized process %d\n", getpid());
+        for (int cnt = 30; cnt--; ) {
+            rn_sleep(60);
+            add_level_cnt(level_cnt);
+        }
+        print_level_cnt(level_cnt, "p3");
+        exit();
+    }
+
+    if (setmonopoly(p1, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p1]\n");
+    if (setmonopoly(p2, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p2]\n");
+    if (setmonopoly(p3, RN_STUDENT_ID) < 0) printf(1, "setmonopoly failed [p3]\n");
+
+    rn_sleep(5000);
+    printf(1, "monopolize!\n");
+    monopolize();
+
+    w_list[0] = p1;
+    w_list[1] = p2;
+    w_list[2] = p3;
+    w_cnt = 0;
+    for (; w_cnt < 3; ) {
+        p = wait();
+        if (p == w_list[w_cnt]) ++w_cnt;
+        else {
+            printf(1, "rn_test10 failed\n expected wait pid = %d, but wait pid = %d\n", w_list[w_cnt], p);
+            exit();
+        }
+    }
+
+    printf(1, "rn_test10 finished successfully\n\n\n");
+}
+
 int main(int argc, char** argv) {
+    int i;
+
     rn_test1();
     rn_test2();
     rn_test3();
     rn_test4();
+    for (i = 0; i < 400; ++i) {
+        rn_sleep(3);
+        yield();
+    }
     rn_test5();
     rn_test6();
+    rn_test7();
+    for (i = 0; i < 400; ++i) {
+        rn_sleep(3);
+        yield();
+    }
+    rn_test8();
+    rn_test9();
+    rn_test10();
 
     exit();
 }
