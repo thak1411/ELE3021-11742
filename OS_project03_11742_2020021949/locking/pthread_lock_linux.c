@@ -4,13 +4,13 @@
 
 int shared_resource = 0;
 
-#define NUM_ITERS 10000
-#define NUM_THREADS 1000
+#define NUM_ITERS 1000000
+#define NUM_THREADS 100
 
-int mutex = 0;
+volatile int mutex = 0;
 
 void lock() {
-    int key = 1;
+    volatile int key = 1;
     for (; key != 0; ) {
         __asm__ __volatile__(
             "xchg %0, %1\n"
@@ -26,8 +26,6 @@ void unlock() {
 
 void* thread_func(void* arg) {
     int tid = *(int*)arg;
-
-    int loc = 0;
     
     lock();
     for (int i = 0; i < NUM_ITERS; ++i) ++shared_resource;
