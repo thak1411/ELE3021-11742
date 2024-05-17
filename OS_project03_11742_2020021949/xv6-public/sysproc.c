@@ -8,7 +8,10 @@
 #include "proc.h"
 #include "spinlock.h"
 
-struct spinlock sbrk_lock;
+extern struct {
+  struct spinlock lock;
+  struct proc proc[NPROC];
+} ptable;
 
 int
 sys_fork(void)
@@ -45,10 +48,6 @@ sys_getpid(void)
   return myproc()->pid;
 }
 
-void sbrk_init(void) {
-  initlock(&sbrk_lock, "sbrk");
-}
-
 int
 sys_sbrk(void)
 {
@@ -59,17 +58,17 @@ sys_sbrk(void)
   if(argint(0, &n) < 0)
     return -1;
 
-  acquire(&sbrk_lock);
+  acquire(&ptable.lock);
 
   if (p->tid) p = p->tparent;
 
   addr = p->sz;
 
   if(growproc(n) < 0) {
-    release(&sbrk_lock);
+    release(&ptable.lock);
     return -1;
   }
-  release(&sbrk_lock);
+  release(&ptable.lock);
   return addr;
 }
 

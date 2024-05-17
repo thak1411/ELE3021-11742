@@ -358,13 +358,12 @@ userinit(void)
 
 // Grow current process's memory by n bytes.
 // Return 0 on success, -1 on failure.
+// The ptable lock must be held.
 int
 growproc(int n)
 {
   uint sz;
   struct proc *curproc, *origin_proc = myproc();
-
-  acquire(&ptable.lock);
 
   if (origin_proc->tid) curproc = origin_proc->tparent;
   else curproc = origin_proc;
@@ -382,8 +381,6 @@ growproc(int n)
     }
   }
   curproc->sz = sz;
-
-  release(&ptable.lock);
 
   switchuvm(origin_proc);
   return 0;
